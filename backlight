@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#
+# Backlight
+#
+
+# Takes input in percentage, default 100%, overwrights intel backlght file as a percent of max_brightness
+
+max=$(</sys/class/backlight/intel_backlight/max_brightness)
+
+percent="${1:-100}"
+
+echo `expr $percent \* $max / 100` | sudo tee > /sys/class/backlight/intel_backlight/brightness
