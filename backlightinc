@@ -1,0 +1,24 @@
+#!/bin/sh
+
+#
+# Backlight Increments
+#
+
+# Takes input inc or dec, increases or decreases $current value by 10% 0f $max, with upper bound $max lower bound 0.
+
+max=$(</sys/class/backlight/intel_backlight/max_brightness)
+
+current=$(</sys/class/backlight/intel_backlight/brightness)
+
+case "$1" in
+    inc) mod=+ ;;
+    dec) mod=- ;;
+esac
+
+brt=`expr $current $mod $max / 10`
+
+
+[ "$brt" -gt "$max" ] && brt=$max
+[ "$brt" -lt 0 ] && brt=0
+
+echo $brt | sudo tee > /sys/class/backlight/intel_backlight/brightness
