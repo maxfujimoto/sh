@@ -1,0 +1,12 @@
+#+title: Shell Scrip Info
+
+
+* Symlinks
+
+  - Store here ~/Dropbox/Documents/Scripts
+  - Link to $HOME/.local/bin for personal or
+  - /usr/local/bin for system wide
+
+* Binding
+
+  - Assign keys to functions in window manager

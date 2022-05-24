@@ -1,0 +1,17 @@
+#!/bin/dash
+
+#
+# MonSwitch
+#
+
+# Dmenu Prompts for monitor switching
+
+options="Int\nVGA\nDual"
+
+selection=$(echo "$options" | dmenu -i)
+
+case "$selection" in
+    Int) xrandr --output LVDS1 --auto --output VGA1 --off ;;
+    VGA) xrandr --output LVDS1 --off --output VGA1 --auto ;;
+    Dual) xrandr --output LVDS1 --auto --output LVDS1 --auto ;;
+esac

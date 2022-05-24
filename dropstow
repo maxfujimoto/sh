@@ -1,0 +1,3 @@
+#!/bin/dash
+
+stow --dir=/$HOME/Dropbox/System_Prefs/.dotfiles/ -t ~/
