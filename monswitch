@@ -8,7 +8,7 @@
 
 options="Int\nVGA\nDual"
 
-selection=$(echo "$options" | dmenu -i)
+selection=$(echo "$options" | dmenu -i -p "Switch Monitor")
 
 case "$selection" in
     Int) xrandr --output LVDS1 --auto --output VGA1 --off ;;

@@ -3,7 +3,7 @@
 
 * Symlinks
 
-  - Store here ~/Dropbox/Documents/Scripts
+  - Store here ~/Dropbox/System_Prefs/Scripts
   - Link to $HOME/.local/bin for personal or
   - /usr/local/bin for system wide
 

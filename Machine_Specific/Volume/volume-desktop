@@ -1,0 +1,24 @@
+#!/bin/sh
+
+#
+# VolumeHP
+#
+
+# Requires alsa-lib alsa-utils pulseaudio pulseaudio-alsa
+
+# Passes strings to amixer, % can be specified, defualt is 5.
+
+NUM="${2:-1}"
+
+volume="$(amixer -c 0 get Headphone | tail -1 | awk '{print $5}' | sed 's/[][]//g')"
+mute="$(amixer -c 0 get Headphone | tail -1 | awk '{print $6}' | sed 's/[][]//g')"
+
+case "$1" in
+    toggle) dunstify -h string:x-dunst-stack-tag:mute -r 0 "Mute $mute"
+	    amixer -q -D pulse sset  Master toggle ;;
+    mute) amixer -q -D pulse sset Master mute ;;
+    up) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
+	amixer -q set Headphone "$NUM"+ ;;
+    down) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
+	  amixer -q set Headphone "$NUM"- ;;
+esac >/dev/null

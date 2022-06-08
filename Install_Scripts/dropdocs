@@ -1,0 +1,20 @@
+#!/bin/dash
+
+#
+# DropDocs
+#
+
+# Creates symlinks for ~/Dropbox/Documents
+
+ln -s "$HOME/Dropbox/Documents/Code" "$HOME"
+ln -s "$HOME/Dropbox/Documents/Org" "$HOME"
+
+
+ln -s "$HOME/Dropbox/Documents/HC" "$HOME/Documents"
+ln -s "$HOME/Dropbox/Documents/Math" "$HOME/Documents"
+ln -s "$HOME/Dropbox/Documents/PDFs" "$HOME/Documents"
+ln -s "$HOME/Dropbox/Documents/Recipe_Book" "$HOME/Documents"
+ln -s "$HOME/Dropbox/Documents/Safe" "$HOME/Documents"
+ln -s "$HOME/Dropbox/Documents/Settings" "$HOME/Documents"
+
+ln -s "$HOME/Dropbox/Documents/Info_Drafts" "$HOME/Documents/Info-Repo"

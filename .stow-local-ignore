@@ -1,0 +1,14 @@
+# emacs
+.+~
+\#.*\#
+^/.*\.org
+
+# git
+\.git.*
+
+# Test File
+^shtest
+
+# Dirs
+^Machine_Specific
+^Install_Scripts
