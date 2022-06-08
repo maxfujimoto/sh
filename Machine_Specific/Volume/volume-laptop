@@ -8,9 +8,15 @@
 
 NUM="${2:-5}"
 
+volume="$(amixer -c 0 get Master | tail -1 | awk '{print $4}' | sed 's/[][]//g')"
+mute="$(amixer -c 0 get Master | tail -1 | awk '{print $6}' | sed 's/[][]//g')"
+
 case "$1" in
-    toggle) amixer sset  Master toggle ;;
+    toggle) dunstify -h string:x-dunst-stack-tag:mute -r 0 "Mute $mute"
+            amixer sset  Master toggle ;;
     mute) amixer sset Master mute ;;
-    up) amixer sset Master "$NUM"%+ ;;
-    down) amixer sset Master "$NUM"%- ;;  
+    up) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
+        amixer sset Master "$NUM"%+ ;;
+    down) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
+          amixer sset Master "$NUM"%- ;;  
 esac >/dev/null
