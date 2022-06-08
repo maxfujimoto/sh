@@ -1,0 +1,16 @@
+#!/bin/dash
+
+#
+# PromptOff
+#
+
+# Dmenu Prompts for monitor switching
+
+options="No\nYes"
+
+selection=$(echo "$options" | dmenu -i -p "Power Off?")
+
+case "$selection" in
+    No) ;;
+    Yes) /sbin/shutdown -h now ;;
+esac
