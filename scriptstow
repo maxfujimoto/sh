@@ -6,9 +6,9 @@
 
 # Stow Dropbox 'Scripts' dir into '~/.local/bin' from anywhere
 
-ln -sf "$HOME/Dropbox/System_Prefs/Scripts/Machine_Specific/Backlight/backlightinc-$1" "$HOME/.local/bin/backlightinc"
-ln -sf "$HOME/Dropbox/System_Prefs/Scripts/Machine_Specific/Backlight/backlight-$1" "$HOME/.local/bin/backlight"
-ln -sf "$HOME/Dropbox/System_Prefs/Scripts/Machine_Specific/Volume/volume-$1" "$HOME/.local/bin/volume"
+ln -sf "$HOME/Code/sh/Machine_Specific/Backlight/backlightinc-$1" "$HOME/.local/bin/backlightinc"
+ln -sf "$HOME/Code/sh/Machine_Specific/Backlight/backlight-$1" "$HOME/.local/bin/backlight"
+ln -sf "$HOME/Code/sh/Machine_Specific/Volume/volume-$1" "$HOME/.local/bin/volume"
 
 
-stow --target=/home/max/.local/bin/ --dir=/home/max/Dropbox/System_Prefs/Scripts/ .
+stow --target=/home/max/.local/bin/ --dir=/home/max/Code/sh/Generic/ .

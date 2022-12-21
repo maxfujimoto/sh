@@ -1,0 +1,28 @@
+#!/bin/dash
+
+#
+# MonSwitch
+#
+
+# Dmenu Prompts for monitor switching
+
+options="Int\n2251p\nVGA-1\nDual.D\nDual.V"
+
+selection=$(echo "$options" | dmenu -i -p "Switch Monitor")
+
+
+xresdpi () {
+    sed -i "s/Xft.dpi.*/Xft.dpi: $1 /g" $HOME/.Xresources
+    xrdb $HOME/.Xresources
+}
+
+case "$selection" in
+    Int)    xrandr --output eDP-1 --auto --output DP-2-3 --off  --output VGA-1 --off --dpi 158
+	    xresdpi 158 ;;
+    2251p)  xrandr --output eDP-1 --off  --output DP-2-3 --auto --output VGA-1 --off --dpi 91 
+	    ;;##xresdpi 91 ;;
+    VGA-1)  xrandr --output eDP-1 --off  --output DP-2-3 --off  --output VGA-1 --auto ;;
+    Dual.D) xrandr --output eDP-1 --auto --output DP-2-3 --auto --output VGA-1 --off --dpi 158
+	    replacedpi 158 ;;
+    Dual.V) xrandr --output eDP-1 --auto --output DP-2-3 --off  --output VGA-1 --auto ;;
+esac
