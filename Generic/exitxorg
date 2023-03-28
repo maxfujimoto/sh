@@ -1,0 +1,16 @@
+#!/bin/dash
+
+#
+# ExitXorg
+#
+
+# Dmenu Prompts to end xorg session loop
+
+options="No\nYes"
+
+selection=$(echo "$options" | dmenu -i -p "pkill Xorg?")
+
+case "$selection" in
+    No) exit 0 ;;
+    Yes) pkill -15 -t tty"$XDG_VTNR" Xorg ;;
+esac
