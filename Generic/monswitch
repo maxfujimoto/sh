@@ -4,25 +4,136 @@
 # MonSwitch
 #
 
-# Dmenu Prompts for monitor switching
+# Dmenu prompts for monitor switching
+# TAGS: POSIX DASH DMENU
 
-options="Int\n2251p\nVGA-1\nDual.D\nDual.V"
+# TODO:
+# - CHECK IF XRANDR IS VALID BEFORE RUNNING DMENU
+# - check if <?>.dpi $selection exists in xresources and use that instead?
+# - see disconnected port option
 
-selection=$(echo "$options" | dmenu -i -p "Switch Monitor")
+# Globals
+all_mons=""
+dis_mons=""
+con_mons=""
 
-
-xresdpi () {
-    sed -i "s/Xft.dpi.*/Xft.dpi: $1 /g" $HOME/.Xresources
-    xrdb $HOME/.Xresources
+# Generate xrandr and eval arg1 every line
+read_xrandr ()
+{
+    IFS='
+' ; set -f			# globing off
+    for line in $(xrandr); do	# TODO make $(xranrr) variable
+	$1
+    done
+unset IFS
+set +f
 }
 
-case "$selection" in
-    Int)    xrandr --output eDP-1 --auto --output DP-2-3 --off  --output VGA-1 --off --dpi 158
-	    xresdpi 158 ;;
-    2251p)  xrandr --output eDP-1 --off  --output DP-2-3 --auto --output VGA-1 --off --dpi 91 
-	    ;;##xresdpi 91 ;;
-    VGA-1)  xrandr --output eDP-1 --off  --output DP-2-3 --off  --output VGA-1 --auto ;;
-    Dual.D) xrandr --output eDP-1 --auto --output DP-2-3 --auto --output VGA-1 --off --dpi 158
-	    replacedpi 158 ;;
-    Dual.V) xrandr --output eDP-1 --auto --output DP-2-3 --off  --output VGA-1 --auto ;;
-esac
+# Make lists $con_mons, $dis_mons and $all_mons
+xrandr_parse_for_mons ()
+{
+    case "$line" in
+	*\ con* )
+	    con_mons="${con_mons}${line%% *} "
+	    all_mons="${all_mons}${line%% *} " ;;
+	*dis* )
+	    dis_mons="${dis_mons}${line%% *} "
+	    all_mons="$all_mons${line%% *} " ;;
+    esac
+}
+
+read_xrandr xrandr_parse_for_mons
+
+# arg1: prompt, arg2: option list, arg3: exit keyword
+dmenu_prompt ()
+{
+    selection=''
+    options=''
+
+    # append "\n" to list elements
+    for word in $2; do
+	options="${options}${word}\n"
+    done
+
+    # dmenu prompt and check $selection
+    selection=$(echo $options $3 | dmenu -i -p "$1")
+    # Check Selection
+    expr "${selection# }" : "$3" 1>/dev/null && return "2"
+
+    for word in $con_mons; do
+	expr "$selection" : "$word" 1>/dev/null && return "3"
+    done
+}
+
+gen_xrandr_string ()
+{
+    # Remove sel_mons from $all_mons and echo resulting list "--off"
+    unsel_string=$(
+	for word in $all_mons; do
+	    expr " $sel_mons " : '.*'$word'.*' 1>/dev/null ||
+		echo "--output $word --off "
+	done
+		)
+
+    # Echo first $sel_mon "--auto" and loop through rest adding "--right-of"
+    prev_mon=''
+    sel_string=$(
+	set -- $sel_mons	# set items of $sel_mons to array
+	echo "--output $1 --auto"
+	prev_mon=$1
+	shift 1 $@		# remove first array item
+	for word in $@; do
+	    echo "--output ${word} --auto --right-of ${prev_mon}"
+	    prev_mon=$word
+	done
+	      )
+    xrandr_string="${unsel_string}${sel_string}"
+}
+
+multi_prompt ()
+{
+    i=1
+    dmenu_return=''
+    selection=''
+    sel_mons=''
+
+    while true; do
+	dmenu_prompt "(L-R) | Monitor #$i" "$multi_opts" "done"
+	dmenu_return=$?
+
+	# Gen $multi_opts if necessary
+	if [ $dmenu_return = 2 ]; then
+	    return 1
+	elif [ $dmenu_return = 3 ]; then
+	    sel_mons="${sel_mons}${selection} "
+	    i=$((i+1))
+
+	    set -- $multi_opts
+	    multi_opts=""
+	    for word in $@; do
+		case "$word" in
+		    "$selection") ;;
+		    *) multi_opts="${multi_opts}${word}" ;;
+		esac
+	    done
+	fi
+    done
+}
+
+main ()
+{
+    multi_opts="$con_mons"
+
+    dmenu_prompt "Switch Monitor" "$con_mons" "multi"
+    dmenu_return=$?
+    if [ $dmenu_return = 2 ]; then
+	multi_prompt
+	gen_xrandr_string
+    elif [ $dmenu_return = 3 ]; then
+	sel_mons=$selection
+	gen_xrandr_string
+    fi
+    # echo "xrandr" $xrandr_string
+    xrandr $xrandr_string
+}
+main
