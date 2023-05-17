@@ -8,6 +8,7 @@
 
 if [ "$#" -eq 0 ]; then
     echo 'TempMacro'
+    exit 0
 elif [ "$#" -eq 1 ] && [ "$1" = "-n" ]; then
     dmenu_string=$( echo '' | dmenu -i -p "Enter temporary macro")
     sed -i -r "10 s/^.*$/$dmenu_string/" "$0"
