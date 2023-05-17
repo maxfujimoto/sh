@@ -36,7 +36,7 @@ xrandr_parse_for_mons ()
 	*\ con* )
 	    con_mons="${con_mons}${line%% *} "
 	    all_mons="${all_mons}${line%% *} " ;;
-	*dis* )
+	*discon* )
 	    dis_mons="${dis_mons}${line%% *} "
 	    all_mons="$all_mons${line%% *} " ;;
     esac
@@ -67,7 +67,7 @@ dmenu_prompt ()
 
 gen_xrandr_string ()
 {
-    # Remove sel_mons from $all_mons and echo resulting list "--off"
+    # Remove sel_mons from $all_mons and echo resulting items "--off"
     unsel_string=$(
 	for word in $all_mons; do
 	    expr " $sel_mons " : '.*'$word'.*' 1>/dev/null ||
