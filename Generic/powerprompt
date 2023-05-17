@@ -1,16 +1,19 @@
 #!/bin/dash
 
 #
-# PromptOff
+# PowerPrompt
 #
 
-# Dmenu Prompts for monitor switching
+# Dmenu Prompts for power options
 
-options="No\nYes"
+options="No\nSleep\nHibernate\nPower\nReboot"
 
-selection=$(echo "$options" | dmenu -i -p "Power Off?")
+selection=$(echo "$options" | dmenu -i -p "Power?")
 
 case "$selection" in
-    No) ;;
-    Yes) /sbin/shutdown -h now ;;
+    No) return ;;
+    Sleep) loginctl suspend ;;
+    Hibernate) loginctl hibernate ;;
+    Power) sudo poweroff ;;
+    Reboot) sudo reboot ;;
 esac
