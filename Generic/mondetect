@@ -1,0 +1,26 @@
+#!/bin/dash
+
+#
+# MonDetect
+#
+
+# Detect laptop lid state and if monitors are connected
+
+
+# Detect connected displays
+xrandr_output=$(xrandr --query)
+laptop_display=$(echo "${xrandr_output}" | grep -w "connected" | grep "LVDS\|eDP\|Touch" | awk '{print $1}')
+external_display=$(echo "${xrandr_output}" | grep -w "connected" | grep -v "${laptop_display}" | awk '{print $1}')
+
+# Detect lid state
+lid_state=$(cat /proc/acpi/button/lid/LID/state | awk '{print $2}')
+
+# Configure monitors
+if [ "${lid_state}" = "closed" ]; then
+    xrandr --output "${external_display}" --auto --primary
+    xrandr --output "${laptop_display}" --off
+else
+    xrandr --output "${external_display}" --auto --primary
+    xrandr --output "${laptop_display}" --auto
+fi
+
