@@ -1,0 +1,28 @@
+#!/bin/dash
+
+#
+# Wifi
+#
+
+# Cli for wifi
+
+case $1 in
+    up)
+	nmcli radio wifi on && pkill -RTMIN+10 dwmblocks &&
+	echo 'Wifi Up' ;;
+    down)
+	nmcli radio wifi off && pkill -RTMIN+10 dwmblocks &&
+	echo 'Wifi Down' ;;
+    list)
+	nmcli device wifi list ;;
+    "")
+	nmcli dev status ;;
+    help)
+	echo 'Options: up, down, list, or ""' ;;
+    *)
+	echo \"$1\" 'is not a valid option'
+esac
+
+# wifiadd () {
+# nmcli device wifi connect $1 password $2
+# }
