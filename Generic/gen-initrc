@@ -6,6 +6,6 @@
 
 # generate a script with .xinitrc settings that can be run within an xorg session.
 
-sed -z 's/# \-* ONLY IN \.XINITRC START.*//' $HOME/.xinitrc > $HOME/.local/bin/initrc
+sed '/# ---------- ONLY IN .XINITRC START ----------/,/# ----------- ONLY IN .XINITRC END -----------/d' $HOME/.xinitrc > $HOME/.local/bin/initrc
 
 chmod +x $HOME/.local/bin/initrc
