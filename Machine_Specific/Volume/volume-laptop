@@ -1,22 +1,58 @@
-#!/bin/sh
+#!/bin/dash
 
 #
 # Volume
 #
 
-# Passes strings to amixer, % can be specified, defualt is 5.
+# Passes strings to pulse or amixer, % can be specified, defualt is 5.
 
 NUM="${2:-5}"
 
-volume="$(amixer -c 0 get Master | tail -1 | awk '{print $4}' | sed 's/[][]//g')"
-mute="$(amixer -c 0 get Master | tail -1 | awk '{print $6}' | sed 's/[][]//g')"
+#volume="$(amixer -c 1 get Master | tail -1 | awk '{print $4}' | sed 's/[][]//g')"
+get_volume() {
+volume="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+volume="${volume#Volume: }"
+volume="${volume%%\ \[MUTED\]}"
+split() {
+	# For ommiting the . without calling and external program.
+	IFS=$2
+	set -- $1
+	printf '%s' "$@"
+}
+volume="$(printf "%.0f" "$(split "$volume" ".")")"
+}
+
+get_mute() {
+volume="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+mute="off"
+[ "$volume" != "${volume%\[MUTED\]}" ] && mute="on"
+}
 
 case "$1" in
-    toggle) dunstify -h string:x-dunst-stack-tag:mute -r 0 "Mute $mute"
-            amixer sset  Master toggle ;;
-    mute) amixer sset Master mute ;;
-    up) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
-        amixer sset Master "$NUM"%+ ;;
-    down) dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume"
-          amixer sset Master "$NUM"%- ;;  
+    toggle)
+	# amixer sset  Master toggle &&
+	# pactl set-sink-mute @DEFAULT_SINK@ toggle &&
+	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle &&
+	    get_mute &&
+	    echo $mute
+	    pkill -RTMIN+11 dwmblocks &&
+	    dunstify -h string:x-dunst-stack-tag:mute -r 0 "Mute $mute" ;;
+    mute)
+	pactl set-sink-mute @DEFAULT_SINK@ 1 &&
+	    pkill -RTMIN+11 dwmblocks ;;
+    up)
+        # amixer sset Master "$NUM"%+ &&
+	# pactl set-sink-volume @DEFAULT_SINK@ +"$NUM"% &&
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ "$NUM"%+ &&
+	    get_volume &&
+	    pkill -RTMIN+11 dwmblocks &&
+	    dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume" ;;
+
+    down)
+	# amixer sset Master "$NUM"%- &&
+	# pactl set-sink-volume @DEFAULT_SINK@ -"$NUM"% &&
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ "$NUM"%- &&
+	    get_volume &&
+	    pkill -RTMIN+11 dwmblocks &&
+	    dunstify -h string:x-dunst-stack-tag:volume -r 1 "Volume $volume" ;;
 esac >/dev/null

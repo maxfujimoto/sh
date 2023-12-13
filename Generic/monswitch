@@ -8,60 +8,96 @@
 # TAGS: POSIX DASH DMENU
 
 # TODO:
+# - FIX TRIPLE MONITOR SUPPORT
 # - CHECK IF XRANDR IS VALID BEFORE RUNNING DMENU
-# - check if <?>.dpi $selection exists in xresources and use that instead?
-# - see disconnected port option
+# - Conf option - check if <?>.dpi $selection exists in xresources and use that instead?
+# - see disconnected ports option
 
-# Globals
+# user time
+# Prompt "Switch Monitor" con mons, multi, conf, done?
+
+# conf
+# display names from conf file
+# key is name value is xrandr command string
+
+# MON
+# append mon to selmon
+
+# Multi
+# FIRST: prompt "(L->R) | Monitor" con mons done
+# con mon appends mon to selmon and applies conf, done exits doing nothing
+# LOOP: prompt "(L->R) | Monitor" con mons done
+# con mon appends mon to selmon and applies conf, done exits doing nothing
+
 all_mons=""
 dis_mons=""
 con_mons=""
 
-# Generate xrandr and eval arg1 every line
-read_xrandr ()
+gen_mon_lists ()
 {
+    userifs="$IFS"		# Save user $IFS
     IFS='
 ' ; set -f			# globing off
     for line in $(xrandr); do	# TODO make $(xranrr) variable
-	$1
+	case "$line" in
+	    *\ con* )
+		con_mons="${con_mons}${line%% *} "
+		all_mons="${all_mons}${line%% *} " ;;
+	    *discon* )
+		dis_mons="${dis_mons}${line%% *} "
+		all_mons="$all_mons${line%% *} " ;;
+	esac
     done
-unset IFS
-set +f
+    IFS="$userifs"
+    set +f
 }
 
-# Make lists $con_mons, $dis_mons and $all_mons
-xrandr_parse_for_mons ()
-{
-    case "$line" in
-	*\ con* )
-	    con_mons="${con_mons}${line%% *} "
-	    all_mons="${all_mons}${line%% *} " ;;
-	*discon* )
-	    dis_mons="${dis_mons}${line%% *} "
-	    all_mons="$all_mons${line%% *} " ;;
-    esac
-}
-
-read_xrandr xrandr_parse_for_mons
-
-# arg1: prompt, arg2: option list, arg3: exit keyword
+# dmenu prompt and check $selection
 dmenu_prompt ()
 {
     selection=''
     options=''
 
-    # append "\n" to list elements
+    # Separate list by lines for dwm
     for word in $2; do
-	options="${options}${word}\n"
+	options="${options}${word}
+"				# this is good
     done
-
-    # dmenu prompt and check $selection
-    selection=$(echo $options $3 | dmenu -i -p "$1")
-    # Check Selection
-    expr "${selection# }" : "$3" 1>/dev/null && return "2"
-
+    # prompt with dmenu
+    selection=$(echo "$options" $3 | dmenu -i -p "$1")
+    expr "${selection# }" : "$3" 1>/dev/null && echo $selection && exit
+    # Check if selection is valid
     for word in $con_mons; do
-	expr "$selection" : "$word" 1>/dev/null && return "3"
+	expr "$selection" : "$word" 1>/dev/null && echo $selection && exit
+    done
+}
+
+multi_prompt ()
+{
+    i=1				# keep track of how many mons being set
+    dmenu_return=''
+    selection=''
+    sel_mons=''
+
+    while true; do
+	local selection=$(dmenu_prompt "(L->R) | Monitor #$i" "$multi_opts" "done")
+	# Gen $multi_opts if necessary
+	if [ "$selection" = "done" ] ;then
+	    break
+	else
+	    sel_mons="${sel_mons}${selection} "
+	    i=$((i+1))
+
+	    set -- $multi_opts
+	    multi_opts=""
+	    for word in $@; do
+		case "$word" in
+		    "$selection") ;;
+		    *) multi_opts="${multi_opts}${word}
+" ;;				# (:
+		esac
+	    done
+	fi
     done
 }
 
@@ -90,50 +126,24 @@ gen_xrandr_string ()
     xrandr_string="${unsel_string}${sel_string}"
 }
 
-multi_prompt ()
-{
-    i=1
-    dmenu_return=''
-    selection=''
-    sel_mons=''
-
-    while true; do
-	dmenu_prompt "(L-R) | Monitor #$i" "$multi_opts" "done"
-	dmenu_return=$?
-
-	# Gen $multi_opts if necessary
-	if [ $dmenu_return = 2 ]; then
-	    return 1
-	elif [ $dmenu_return = 3 ]; then
-	    sel_mons="${sel_mons}${selection} "
-	    i=$((i+1))
-
-	    set -- $multi_opts
-	    multi_opts=""
-	    for word in $@; do
-		case "$word" in
-		    "$selection") ;;
-		    *) multi_opts="${multi_opts}${word}" ;;
-		esac
-	    done
-	fi
-    done
-}
+gen_mon_lists			# this has global scope
 
 main ()
 {
     multi_opts="$con_mons"
+    local selection=NULL
+    selection=$(dmenu_prompt "Switch Monitor" "$con_mons" "multi")
 
-    dmenu_prompt "Switch Monitor" "$con_mons" "multi"
-    dmenu_return=$?
-    if [ $dmenu_return = 2 ]; then
-	multi_prompt
+    # Check if dmenu set anything 
+    [ -z ${selection} ] || \
+    if [ "$selection" = "multi" ]; then
+     	multi_prompt
 	gen_xrandr_string
-    elif [ $dmenu_return = 3 ]; then
-	sel_mons=$selection
+	xrandr $xrandr_string
+    else
+     	sel_mons=$selection
 	gen_xrandr_string
-    fi
-    # echo "xrandr" $xrandr_string
-    xrandr $xrandr_string
+	xrandr $xrandr_string
+    fi || return 0;
 }
 main

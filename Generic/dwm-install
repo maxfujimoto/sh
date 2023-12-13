@@ -6,4 +6,4 @@
 
 # Install DWM from anywhere
 
-make clean install -C /home/max/.config/dwm/
+make clean install -C /home/max/.config/mf-dwm/
