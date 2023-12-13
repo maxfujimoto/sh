@@ -14,6 +14,6 @@ case "$selection" in
     No) return ;;
     Sleep) loginctl suspend ;;
     Hibernate) loginctl hibernate ;;
-    Power) sudo poweroff ;;
-    Reboot) sudo reboot ;;
+    Power) sudo loginctl poweroff ;;
+    Reboot) sudo loginctl reboot ;;
 esac
