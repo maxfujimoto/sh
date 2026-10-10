@@ -1,0 +1,115 @@
+#!/bin/dash
+
+
+
+dash_readline_printf_pipe=$(
+    printf '%s\n' "$1" |
+	while IFS= read -r line;
+	do
+	   # EXPRESSIONS
+	done
+	)
+
+
+function dash_readline_for ()
+{
+IFS='
+'
+set -f
+for line in $1; do
+    # EXPRESSIONS
+done
+unset IFS
+set +f
+}
+
+
+conditional_regex ()
+{
+    expr "$1" : '.*'$2'.*' 1>/dev/null && $3
+}
+
+gen_xrandr_string ()
+{
+# Compare $selection to $all_mons and surround in appropriate options
+    xrandr_string=$(
+	for word in $all_mons; do
+	    if [ "$word" = "$selection" ]; then
+		echo "--output ${word} --auto"
+	    else
+		echo "--output ${word} --off"
+	    fi
+	done
+		 )
+}
+
+
+gen_xrandr_string ()
+{
+    xrandr_string=$(
+	for word in $all_mons ; do
+	    case "$word" in
+		"$selection") echo "--output ${word} --auto" ;;
+		*) echo "--output ${word} --off" ;;
+	    esac
+	done
+		 )
+}
+
+parse_for_mons ()
+{
+    expr "$line" : '.*con.*' 1>/dev/null &&
+	all_mons="${all_mons}${line%% *} "
+    expr "$line" : '.* con.*' 1>/dev/null &&
+	con_mons="${con_mons}${line%% *}\n"
+}
+
+
+list="one two three four"
+for i in $(seq 1 $(echo $list | wc -w)); do
+  echo $list | tr " " "\n" | shuf | tr "\n" " " | xargs printf "%s\n"
+done
+
+
+for p in $(echo "one two three four" | tr " " "\n" | xargs -n 2 echo | sed 's/ /\n/g' | sort -u); do
+  echo $p
+done
+
+gen_multi_string ()
+{
+    xrandr_string=$(
+	i=1
+	dmenu_prompt "monitor #$i" "$multi_opts" "done"
+	dmenureturn=$?
+	if [ $dmenureturn = 1 ]; then
+	    return
+	elif [ $dmenureturn = 2 ]; then
+	    selected="${selected}${selection}"
+	    i=$((i+1))
+
+	    multi_opts=$
+	    set IFS=' ' 
+	    for word in $multi_opts; do
+		case "$word" in
+		    "$selection")
+			xrandr_string="${multi_con_string} --output ${word} --auto --left-of "
+			printf 'yolo' ;;
+		    
+		    *)
+			multi_opts="${multi_opts}${word}"
+		esac
+	    done	
+	else
+	    break
+	fi
+
+	gen_multi_string
+		    )
+}
+
+
+for word in $input; do
+    expr "$sel" : '.*'$word'.*' 1>/dev/null && echo "werks"
+done
+
+[ "$UID" -eq 0 ] || exec sudo bash "$0" "$@"; echo "%UID"  ;;

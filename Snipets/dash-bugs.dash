@@ -1,0 +1,30 @@
+#!/bin/dash
+
+
+
+
+assigning variable after && breaks 
+expr_bug_broken ()
+{
+    expr "multi" : "$selection" 1>/dev/null && selection_made=2 && break
+
+    IFS='\n'			# wrong specifier? still includes new line
+    for word in $con_mons; do
+	echo $word
+	expr "$selection" : "$word" 1>/dev/null && selection_made=1 ; unset IFS; break # make selection made a variable
+    done
+    unset IFS
+}
+
+
+expr_bug_works ()
+{
+    expr "multi" : "$selection" 1>/dev/null && selection_made=2 && break
+
+    IFS='\n'			# wrong specifier? still includes new line
+    for word in $con_mons; do
+	echo $word
+	expr "$selection" : "$word" 1>/dev/null && unset IFS; selection_made=1 ; break # make selection made a variable
+    done
+    unset IFS
+}
