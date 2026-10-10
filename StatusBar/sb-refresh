@@ -1,0 +1,14 @@
+#!/bin/dash
+
+#
+# sb-refresh 
+#
+
+# refresh all status bar elements
+
+i=1
+while [ $i -le 20 ]; do
+    pkill -RTMIN+$i dwmblocks
+    i=$((i+1))
+done
+

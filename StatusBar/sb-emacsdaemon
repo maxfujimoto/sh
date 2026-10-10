@@ -1,0 +1,13 @@
+#!/bin/dash
+
+#
+# sb-emacsclient
+#
+
+. sb-status2d
+
+status=$(emacsclient -a false -e 't')
+
+[ "$status" = 't' ] && \
+    printf "%s%s%s" "$s2d_color5" "" "$s2d_reset" && exit 0
+

@@ -1,0 +1,11 @@
+#!/bin/dash
+
+#
+# sb-time 
+#
+
+# Description: Script to get current date and time
+
+. sb-status2d
+
+printf "%s%s%s" "$s2d_color15" "$(date '+%I:%M%p')" "$s2d_reset" && exit 0

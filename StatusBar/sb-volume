@@ -1,0 +1,27 @@
+#!/bin/dash
+
+#
+# sb-volume 
+#
+
+# Get volume
+
+. sb-status2d
+
+volume="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+volume="${volume#Volume: }"
+split() {
+	# For ommiting the . without calling and external program.
+	IFS=$2
+	set -- $1
+	printf '%s' "$@"
+}
+
+volume="$(printf "%.0f" "$(split "$volume" ".")")"
+
+[ "$volume" != "${volume%\[MUTED\]}" ] &&
+    printf "%s%s %s%%%s" "$s2d_color2" "󰖁" "$volume" "$s2d_reset" && exit 0
+
+    icon_volume=""
+
+printf "%s%s %s%%%s" "$s2d_color2" "$icon_volume" "$volume" "$s2d_reset" && exit 0

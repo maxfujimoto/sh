@@ -1,0 +1,16 @@
+#!/bin/dash
+
+#
+# sb-sshd
+#
+
+# Display a glyph if sshd is running
+
+. sb-status2d
+
+status=$(rc-status -m | awk '/sshd/ && /started/')
+
+[ "$status" ] && \
+    printf "%s%s%s" "$s2d_color1" "󰣀" "$s2d_reset" && exit 0
+
+

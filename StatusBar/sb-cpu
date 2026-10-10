@@ -1,0 +1,11 @@
+#!/bin/dash
+
+
+# Description: Script to get cpu usage
+
+. sb-status2d
+
+icon_cpu=""
+cpustat="$(uptime | awk -F'[a-z]:' '{ print $2 }')"
+
+printf "%s%s %s%s" "$s2d_color2" "$icon_ram" "$cpustat" "$s2d_reset" && exit 0

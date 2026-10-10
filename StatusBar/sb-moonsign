@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Get current date and time for the specified timezone
+TZ="America/New_York"
+datetime=$(TZ=$TZ date +'%Y-%m-%d %H:%M:%S %Z')
+
+# Calculate the Moon's position and constellation
+moon_data=$(moon $datetime)
+moon_position=$(echo "$moon_data" | awk '/^Moon position:/ {print $3}')
+constellation=$(echo "$moon_data" | awk '/^Moon is located in:/ {print $5}')
+
+# Print the results
+echo "Moon position: $moon_position"
+echo "Constellation: $constellation"
+
+https://docs.astronomyapi.com/requests-and-response/body-properties
+*** Is there a shell api that returns the moon sign (zodiac)
+
+Yes, there are several APIs that can provide the moon sign based on the date, time and location. Some examples include:
+- Astrology API (https://astrologyapi.com/)
+- Swiss Ephemeris (https://www.astro.com/swisseph/swephinfo_e.htm)
+- MoonCalc API (https://www.mooncalc.org/api)
+
+*** can you give me an example
+
+Sure! Here's an example using the Astrology API:
+
+#+begin_src 
+curl -X GET 'https://astrologyapi.com/api/v1/moon_sign' \
+-H 'Authorization: <<YOUR_API_KEY>>' \
+-d 'day=28' \
+-d 'month=5' \
+-d 'year=1992' \
+-d 'hour=9' \
+-d 'minute=15' \
+-d 'second=0' \
+-d 'lat=28.7041' \
+-d 'lng=77.1025'
+#+end_src
+
+This API call returns the moon sign based on the provided date, time, and location. You'll need to replace =<<YOUR_API_KEY>>= with your actual API key.
+
+*** 

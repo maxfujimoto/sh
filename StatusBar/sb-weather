@@ -1,0 +1,15 @@
+#!/bin/dash
+
+#
+# sb-weather
+#
+
+# Get local weather
+
+. sb-status2d
+
+location=$(xrdb -query | grep rc.location | cut -f 2)
+
+wttr=$(curl wttr.in/"$location"?format="%c%t+%w+%p+%u")
+
+printf "%s%s%s" "$s2d_color4" "$wttr" "$s2d_reset" && exit 0

@@ -1,0 +1,52 @@
+#!/bin/dash
+
+#
+# sb-dot
+#
+
+# I will strongly interpret the dot!
+
+. sb-status2d
+
+# Curl xml
+query=$(curl -s https://gcpdot.com/gcpindex.php)
+echo $query
+# Parse for first float
+variance=$(echo "$query" | grep -Po '<s t=[^>]+>\K[^<]+' | head -1)
+echo $variance
+# Convert to 2 digit int
+variance="$(expr substr "$variance" 3 $(expr length "$variance" - 7))"
+echo $variance
+
+# Map to color
+red=$(
+    if [ "$variance" -lt 50 ]; then
+	result=$(expr 255 \* \( 100 - "$variance" \) / 100)
+	echo "$result"
+  else
+    echo 00
+  fi
+)
+green=$(
+    if  [ "$variance" -lt 15 ] ; then
+	result=$(expr 51 \* $variance / 10)
+	echo "$result"
+    elif  [ "$variance" -gt 85 ] ; then
+	result=$(expr 51 \* \( 100 - $variance \) / 10)
+	echo "$result"
+    else
+	echo 255
+  fi
+)
+blue=$(
+  if [ "$variance" -gt 50 ]; then
+      result=$(expr 255 \* "$variance" / 100)
+    echo "$result"
+  else
+    echo 00
+  fi
+)
+
+color=$(printf "^c#%02X%02X%02X^" $red $green $blue)
+
+printf "%s%s%s" "$color" "" "$s2d_reset" && exit 0

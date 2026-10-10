@@ -1,0 +1,20 @@
+#!/bin/dash
+# Description: Script to get moon phase
+
+. sb-status2d
+
+wttr=$(curl wttr.in/?format="%m")
+
+# For nerd fonts
+case $wttr in
+    🌕) wttr=🌝;;
+    🌖) wttr=󰽦;;
+    🌗) wttr=󰽣;;
+    🌘) wttr=󰽥;;
+    🌑) wttr=🌚;;
+    🌒) wttr=󰽧;;
+    🌓) wttr=󰽡;;
+    🌔) wttr=󰽨;;
+esac
+
+printf "%s%s%s" "$s2d_color3" "$wttr" "$s2d_reset" && exit 0

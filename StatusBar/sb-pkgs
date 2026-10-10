@@ -1,0 +1,15 @@
+#!/bin/dash
+
+#
+# sb-pkgs
+#
+
+# Get upgradeable packages
+
+. sb-status2d
+
+# sudo pacman -Syq --needed || echo "Packages could not be updated"
+
+upgradablePackages=$(yay -Qu | wc -l || echo "There was an error listing upgradeale packages")
+
+printf "%s%s%d%s" "$s2d_color2" "󰏖 " "$upgradablePackages" "$s2d_reset" && exit 0

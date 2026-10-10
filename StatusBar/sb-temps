@@ -1,0 +1,21 @@
+#!/bin/dash
+
+
+# Description: Script to get temps
+
+. sb-status2d
+
+# https://www.reddit.com/r/archlinux/comments/9kf53h/looking_for_a_script_to_parse_lmsensors_output/
+# temp=$(perl -E '$_ = qx{sensors}; for (split /^\n/m) { if (/^coretemp/) { $sum = 0; $cores = 0; $cores++, $sum += $_ for /^Core \d+: +\+(\d+)/mg; push @list, sprintf "%.1f", $sum / $cores; } } say join ", ", @list;')
+
+temp=$(perl -E '$_ = qx{sensors}; for (split /^\n/m) { if (/^coretemp/) { $sum = 0; $cores = 0; $cores++, $sum += $_ for /^Core \d+: +\+(\d+)/mg; push @list, int($sum / $cores); } } say join ", ", @list;')
+
+if [ "${temp}" -lt 63 ]; then 
+    color=$s2d_color2 
+elif [ "${temp}" -7t 73 ];then
+     color=$s2d_color3
+else
+    color=$s2d_color1
+fi
+
+printf "%s%s%s" "$color" "$temp" "$s2d_reset" && exit 0

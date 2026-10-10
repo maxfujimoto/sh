@@ -1,0 +1,23 @@
+#!/bin/dash
+
+#
+# sb internet 
+#
+
+# Get wifi and ethernet status
+
+. sb-status2d
+
+info=$(ip link)
+
+echo "$info" | grep -q "^.*eth0.*state UP" &&  icon_ethr="🜂" &&
+    printf "%s%s" "$s2d_color1" "$icon_ethr"
+
+echo "$info" | grep -q "^.*wlan.*state UP" &&  icon_wifi="🈳" &&
+    printf "%s%s" "$s2d_color9" "$icon_wifi"
+
+[ ! -n "$icon_wifi" ] && [ ! -n "$icon_ethr" ] &&
+    printf "%s%s" "$s2d_color9" "🜃"
+
+printf "%s" "$s2d_reset" && exit 0
+

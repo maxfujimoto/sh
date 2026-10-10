@@ -1,0 +1,55 @@
+#!/bin/bash
+
+#
+# sb-dot
+#
+
+# I'm gonna strongly interpret the dot!
+
+. sb-status2d
+
+# Curl xml
+query=$(curl -s https://gcpdot.com/gcpindex.php)
+# Parse for first float
+variance=$(echo $query | grep -Po '<s t=[^>]+>\K[^<]+' | head -1)
+echo $variance
+
+
+if (( $(echo "$variance >= 0.01" | bc -l) )); then
+    color="#FFA8C0"
+fi
+if (( $(echo "$variance >= 0.05" | bc -l) )); then
+    color="#FF1E1E"
+fi
+if (( $(echo "$variance >= 0.08" | bc -l) )); then
+    color="#FFB82E"
+fi
+if (( $(echo "$variance >= 0.15" | bc -l) )); then
+    color="#FFD517"
+fi
+if (( $(echo "$variance >= 0.23" | bc -l) )); then
+    color="#FFFA40"
+fi
+if (( $(echo "$variance >= 0.30" | bc -l) )); then
+    color="#F9FA00"
+fi
+if (( $(echo "$variance >= 0.40" | bc -l) )); then
+    color="#AEFA00"
+fi
+if (( $(echo "$variance >= 0.90" | bc -l) )); then
+    color="#64FA64"
+fi
+if (( $(echo "$variance >= 0.9125" | bc -l) )); then
+    color="#64FAAB"
+fi
+if (( $(echo "$variance >= 0.93" | bc -l) )); then
+    color="#ACF2FF"
+fi
+if (( $(echo "$variance >= 0.95" | bc -l) )); then
+    color="#0EEEFF"
+fi
+if (( $(echo "$variance >= 1" | bc -l) )); then
+    color="#24CBFD"
+fi
+
+printf "%s%s%s" "^c$color^" "" "$s2d_reset" && exit 0
