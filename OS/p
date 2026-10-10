@@ -1,0 +1,90 @@
+#!/bin/dash
+
+#
+# P
+#
+
+# Pacman wrapper
+
+
+if [ "$#" -eq 0 ]; then
+    pacman --color=always
+fi
+
+pkg_name_check ()
+{
+if  [ "$#" -lt 2 ]; then
+    echo "Please enter a package name"
+    exit 1
+fi
+}
+
+case "$1" in
+    h)
+	echo \
+	    "Pacman Helper
+p	pacman
+P	sudo pacman
+ls	Search installed packages
+sz	Sort packages by size - fzf
+lsz	Sort packages by size - less
+ds	Display package dependencies
+rs	Display packages that require a package
+fs	List files installed by a package
+fo	Display the package that owns a file
+bs	Display the package a program belongs to
+qs	Search for a package by name
+up	List upgradable packages
+c	Clean cache, keeping the latest version
+cc	Clear cache\n"
+        ;;
+    ls)
+    	pacman -Q | fzf
+        ;;
+    sz)
+	pacman -Qi | grep -E '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nrk 2 | grep MiB | fzf
+        echo "Restarting the application."
+        ;;
+    lsz)
+	pacman -Qi | grep -E '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nrk 2 | grep MiB | less
+        ;;
+    ds)
+	pkg_name_check "$@"
+	pactree -c "$2"
+	;;
+    rs)
+    [ -n "${2}" ] &&
+	pacman -Qi "$2" | grep 'Required By' ||
+	    echo "Please provide a package"
+	;;
+    fs)
+	pkg_name_check "$@"
+	pacman -Ql "$2"
+	;;
+    fo)
+	pkg_name_check "$@"
+	pacman -Qo "$2"
+	;;
+    bs)
+	pkg_name_check "$@"
+	pacman -Ql | grep "$2$" | cut -f1 -d ' ' | uniq
+	;;
+    qs)
+	pkg_name_check "$@"
+	pacman -Q | grep "$2"
+	;;
+    up)
+	yay -Qu
+	;;
+    c)
+	echo "sudo paccache -rk1..." && sudo paccache -rk1 && echo "Cache Cleaned, Leaving Latest Version" || echo "Something went wrong"
+	;;
+    cc)
+	echo "sudo pacman -Scc..." && sudo pacman -Scc && echo "Cache Cleared" || echo "Something went wrong"
+    ;;
+    *)
+        echo "Invalid argument: $1"
+        exit 1
+        ;;
+esac
+
