@@ -1,0 +1,14 @@
+#!/bin/dash
+
+#
+# Backlight for ddc monitors
+#
+
+# Takes input in percentage, default 100%, sends value to specified monitor, default 1
+
+max='100'
+percent="${1:-100}"
+monitor="${2:-1}"		# default 1
+
+# List of monitors (you can modify this to fit your actual monitor names or IDs)
+ddcutil setvcp 10 "$percent" --display "$monitor"

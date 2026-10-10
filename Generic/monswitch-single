@@ -1,0 +1,79 @@
+#!/bin/dash
+
+#
+# MonSwitch
+#
+
+# Dmenu prompt switching to a single monitor
+# Supports unlimited monitors
+# TAGS: POSIX DASH DMENU
+
+# Globals
+all_mons=""
+con_mons=""
+
+# Generate xrandr and read line by line
+read_xrandr ()
+{
+    # Internal Field Separator = new line
+    IFS='
+' ; set -f 			# globing off
+for line in $(xrandr); do
+    $1
+done
+unset IFS			# DO I NEED TO?
+set +f    
+}
+
+# Match lines for all and connected monitors
+parse_for_mons ()
+{
+    expr "$line" : '.*con.*' 1>/dev/null &&
+	all_mons="${all_mons}${line%% *} "
+    expr "$line" : '.* con.*' 1>/dev/null &&
+	con_mons="${con_mons}${line%% *}\n"
+}
+
+read_xrandr parse_for_mons
+
+# Dmenu prompt for $selection from $con_mons
+selection=$(echo "$con_mons" | dmenu -i -p "Switch Monitor")
+
+# Compare $selection to $all_mons and surround in appropriate options
+xrandr_string=$(
+    for word in $all_mons; do
+	if [ "$word" = "$selection" ]; then
+	    echo "--output ${word} --auto"
+	else
+	    echo "--output ${word} --off"
+	fi
+    done
+)
+
+# Set --output to selected
+echo "xrandr "$xrandr_string
+
+monxpx=""
+monxlen=""
+
+# Match lines for px and size
+parse_for_info ()
+{
+    expr "$line" : '.*'$selection'.*' 1>/dev/null &&
+	monxpx="${monxpx}${line}\n"
+}
+
+# Parse new xrandr for new monitor data
+read_xrandr parse_for_info
+
+echo "sel= $selection"
+echo "monxpx= " $monxpx
+
+# new xrandr option 1
+# mon_data=$(xrandr | grep -Eo 'connected [:0-9:]*x[:0-9]*|[:0-9:]*mm')
+# new_mon_data=$(xrandr | grep -w ${selection})
+
+# dpi=$monxpx/($monxlen/"2.45")
+
+# Set new dpi
+#echo "xrandr --option "$selection" --dpi "$dpi" &pkill dwm"

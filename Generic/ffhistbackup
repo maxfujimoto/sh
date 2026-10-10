@@ -1,0 +1,39 @@
+#!/bin/dash
+
+#
+# Firefox History Backup
+#
+
+# Set source and destination paths
+SOURCE_FILE="${HOME}/.mozilla/firefox/ffsd9rey.2023/places.sqlite"
+DESTINATION_DIR="${HOME}/Dropbox/System_Prefs/Firefox_History"
+
+# Ensure destination directory exists
+mkdir -p "${DESTINATION_DIR}"
+
+# Check if source file exists
+if [ -f "${SOURCE_FILE}" ]; then
+    # Get size of source and destination files
+    SOURCE_SIZE=$(stat -c %s "${SOURCE_FILE}")
+    DEST_FILE="${DESTINATION_DIR}/places.sqlite"
+
+    # Check if destination file exists and get its size
+    if [ -f "${DEST_FILE}" ]; then
+        DEST_SIZE=$(stat -c %s "${DEST_FILE}")
+
+        # Compare sizes and sync if source is larger or sizes differ
+        if [ "${SOURCE_SIZE}" -gt "${DEST_SIZE}" ]; then
+            rsync -av "${SOURCE_FILE}" "${DEST_FILE}.new"
+            mv "${DEST_FILE}.new" "${DEST_FILE}"
+            echo "Synced and updated ${DEST_FILE}"
+        else
+            echo "${DEST_FILE} is already up to date."
+        fi
+    else
+        # Destination file doesn't exist, so create a new backup
+        cp "${SOURCE_FILE}" "${DEST_FILE}"
+        echo "Created new backup: ${DEST_FILE}"
+    fi
+else
+    echo "Source file ${SOURCE_FILE} not found."
+fi

@@ -1,0 +1,27 @@
+#!/bin/dash
+
+#
+# Lan
+#
+
+# Cli for netifrc LAN
+
+case $1 in
+    up)
+	sudo rc-service net.eth0 start &&
+	    echo 'LAN Up' &
+	sleep 5;  pkill -RTMIN+10 dwmblocks ||
+	    echo 'Lan was unable to start';;
+    down)
+	sudo rc-service net.eth0 stop && pkill -RTMIN+10 dwmblocks &&
+	echo 'LAN Down' ;;
+    help)
+	echo 'up	Start netifrc service
+down	Stop netifrc service' ;; 
+    *)
+	echo \"$1\" 'is not a valid option'
+esac
+
+# wifiadd () {
+# nmcli device wifi connect $1 password $2
+# }

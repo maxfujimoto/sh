@@ -1,0 +1,11 @@
+#!/bin/dash
+
+#
+# Updateate Artix Mirror List
+#
+
+mirrorlist=$(rankmirrors -v -n 5 /etc/pacman.d/mirrorlist.pacnew | tail -n 5)
+echo $mirrorlist
+
+
+# sudo wget https://github.com/archlinux/svntogit-packages/raw/packages/pacman-mirrorlist/trunk/mirrorlist -O /etc/pacman.d/mirrorlist-arch

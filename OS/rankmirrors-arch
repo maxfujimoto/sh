@@ -1,0 +1,45 @@
+#!/bin/sh
+
+#
+# Rank Mirrors Arch
+#
+
+# Automatically backup and rank the archlinux mirrorlist
+
+newlist="/etc/pacman.d/mirrorlist-arch.pacnew"
+cleanlist="/etc/pacman.d/mirrorlist-arch.backup"
+mirrorlist="/etc/pacman.d/mirrorlist-arch"
+
+# Backup new mirrorlist for editing
+cp "$newlist" "$cleanlist" || exit
+# Backup old mirrorlist
+cp "$mirrorlist" "$mirrorlist.old" || exit
+
+# Cleanup
+awk '/^## Country Name$/{f=1; next}f==0{next}/^$/{exit}{print substr($0, 1);}' $cleanlist || exit
+
+sed -i 's/^#Server/Server/' $cleanlist || exit
+
+cat $cleanlist
+
+# Rankmirrors for top 5, use /dev/tty if available otherwise use /dev/stdout 
+if [ -t 1 ]; then
+    fastmirrors=$(rankmirrors -v -n 5 "$cleanlist" | tee /dev/tty | tail -n 5)
+else
+    fastmirrors=$(rankmirrors -v -n 5 "$cleanlist" | tee /dev/stdout | tail -n 5)
+fi
+
+emptyline=$(
+    cat $newlist | while IFS= read -r line; do
+	line_num=$((line_num + 1))
+	if [ -z "$line" ]; then
+            echo "$line_num"
+            break
+	fi
+    done
+	 )
+
+echo "$fastmirrors"
+echo "$emptyline"
+
+# sed -i "${emptyline}i\\ ${fastmirrors}" "$mirrorlist"

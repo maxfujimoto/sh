@@ -1,0 +1,32 @@
+#!/bin/dash
+
+#
+# Wifi
+#
+
+# Cli for iwd wifi
+
+case $1 in
+    up)
+	sudo rc-service iwd start && 
+	    echo 'Wifi Up'
+	sleep 5;  pkill -RTMIN+10 dwmblocks ;;
+    down)
+	sudo rc-service iwd stop && pkill -RTMIN+10 dwmblocks &&
+	echo 'Wifi Down' ;;
+    list)
+	 iwctl station wlan0 scan &&
+	 iwctl station wlan0 get-networks ;;
+    con)
+	iwctl --passphrase $3 station wlan0 connect $2 ;;
+    "")
+	iwctl device wlan0 show ;;
+    help)
+	echo 'up	Start iwd service
+down	Stop iwd service
+list	List local networks
+con	con <SSID> <passphrase>
+""	Show info' ;;
+    *)
+	echo \"$1\" 'is not a valid option'
+esac

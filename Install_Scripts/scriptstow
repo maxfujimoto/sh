@@ -1,0 +1,14 @@
+#!/bin/dash
+
+#
+# Script Stow
+#
+
+# Stow scripts dir into '~/.local/bin'
+
+ln -sf "$HOME/Code/sh/Machine_Specific/Backlight/backlightinc-$1" "$HOME/.local/bin/backlightinc"
+ln -sf "$HOME/Code/sh/Machine_Specific/Backlight/backlight-$1" "$HOME/.local/bin/backlight"
+ln -sf "$HOME/Code/sh/Machine_Specific/Volume/volume-$1" "$HOME/.local/bin/volume"
+
+
+stow --target=/home/max/.local/bin/ --dir=/home/max/Code/sh/Generic/ .

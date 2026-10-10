@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Run org-babel-tangle-clean and org-babel-tangle on ~/.config/emacs/emacs.org
+
+
+emacs --batch \
+  --init-directory="$HOME/.config/emacs" \
+  --eval "(require 'org)" \
+  --eval "(setq org-confirm-babel-evaluate nil)" \
+  --eval "(org-babel-tangle-file \"$HOME/.config/emacs/emacs.org\")"
+
+# emacs --batch --eval "(progn
+#   (find-file \"~/.config/emacs/emacs.org\")
+#   (org-babel-tangle)
+#   (kill-emacs))"

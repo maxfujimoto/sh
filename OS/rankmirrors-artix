@@ -1,0 +1,36 @@
+#!/bin/sh
+
+#
+# Rank Mirrors Artix
+#
+
+# Automatically backup and rank the artix linux mirrorlist
+
+
+newlist="/etc/pacman.d/mirrorlist.pacnew"
+mirrorlist="/etc/pacman.d/mirrorlist"
+
+# Backup old mirrorlist
+cp "$mirrorlist" "$mirrorlist.old" || exit
+
+# Rankmirrors for top 5, use /dev/tty if available otherwise use /dev/stdout 
+if [ -t 1 ]; then
+    fastmirrors=$(rankmirrors -v -n 5 "$mirrorlist" | tee /dev/tty | tail -n 5)
+else
+    fastmirrors=$(rankmirrors -v -n 5 "$mirrorlist" | tee /dev/stdout | tail -n 5)
+fi
+
+emptyline=$(
+    cat $newlist | while IFS= read -r line; do
+	line_num=$((line_num + 1))
+	if [ -z "$line" ]; then
+            echo "$line_num"
+            break
+	fi
+    done
+	 )
+
+echo "$fastmirrors"
+echo "$emptyline"
+
+# sed -i "${emptyline}i\\ ${fastmirrors}" "$mirrorlist"

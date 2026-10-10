@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#
+# Backlight
+#
+
+# Set monitor backlight with ddcutil
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <display_number> <brightness_value>"
+    exit 1
+fi
+
+display_number="$1"
+brightness_value="$2"
+
+set_backlight() {
+    command="ddcutil --display $1 setvcp 10 $2"
+    echo "Executing: $command"
+    $command
+}
+
+set_backlight "$display_number" "$brightness_value"
