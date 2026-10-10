@@ -5,6 +5,7 @@
 #
 
 # Passes strings to pulse or amixer, % can be specified, defualt is 5.
+# TODO - Change volume before printing, print and fetch less often
 
 NUM="${2:-5}"
 

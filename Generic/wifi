@@ -4,25 +4,29 @@
 # Wifi
 #
 
-# Cli for wifi
+# Cli for iwd wifi
 
 case $1 in
     up)
-	nmcli radio wifi on && pkill -RTMIN+10 dwmblocks &&
-	echo 'Wifi Up' ;;
+	sudo rc-service iwd start && 
+	    echo 'Wifi Up'
+	sleep 5;  pkill -RTMIN+10 dwmblocks ;;
     down)
-	nmcli radio wifi off && pkill -RTMIN+10 dwmblocks &&
+	sudo rc-service iwd stop && pkill -RTMIN+10 dwmblocks &&
 	echo 'Wifi Down' ;;
     list)
-	nmcli device wifi list ;;
+	 iwctl station wlan0 scan &&
+	 iwctl station wlan0 get-networks ;;
+    con)
+	iwctl --passphrase $3 station wlan0 connect $2 ;;
     "")
-	nmcli dev status ;;
+	iwctl device wlan0 show ;;
     help)
-	echo 'Options: up, down, list, or ""' ;;
+	echo 'up	Start iwd service
+down	Stop iwd service
+list	List local networks
+con	con <SSID> <passphrase>
+""	Show info' ;;
     *)
 	echo \"$1\" 'is not a valid option'
 esac
-
-# wifiadd () {
-# nmcli device wifi connect $1 password $2
-# }

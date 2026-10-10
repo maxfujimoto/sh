@@ -15,12 +15,59 @@ external_displays=$(echo "${xrandr_output}" | grep -w "connected" | grep -v "${l
 # Detect lid state
 lid_state=$(cat /proc/acpi/button/lid/LID/state | awk '{print $2}')
 
+apply_user_prefs ()
+{
+    if [ -f "$XDG_CONFIG_HOME/monswitch/monswitch.conf" ]; then
+	config_file=$(cat "$XDG_CONFIG_HOME/monswitch/monswitch.conf")
+	oldIFS=$IFS
+	IFS=' '
+	user_string=""
+	for mon in $xrandr_string; do
+	    IFS='
+'				# (:
+	    for line in $config_file; do
+		if [ "${line#"$mon"}" != "$line" ]; then
+		    # echo $line
+		    user_string="${user_string}${line} "
+		else
+		    # echo  $mon
+		    user_string="${user_string}${mon} "
+		fi
+	    done
+	done
+    else
+	echo "File does not exist or is not a regular file: $XDG_CONFIG_HOME/monswitch/monswitch.conf"
+    fi
+    IFS=$oldIFS
+}
+
+gen_xrandr_string ()
+{
+    # Echo first $sel_mon "--auto" and loop through rest adding "--right-of"
+    prev_mon=''
+    sel_string=$(
+	set -- $external_displays # set items of $external_displays to array
+	echo "--output $1 --auto --primary"
+	prev_mon=$1
+	shift 1 $@		# remove first array item
+	for word in $@; do
+	    echo "--output ${word} --auto --right-of ${prev_mon}"
+	    prev_mon=$word
+	done
+	      )
+    xrandr_string="${unsel_string}${sel_string}"
+}
+
+gen_xrandr_string
+apply_user_prefs
+
 # Configure monitors
 if [ "${lid_state}" = "closed" ]; then
-    xrandr --output "${external_display}" --auto --primary \
+    xrandr $user_string \
 	   --output "${laptop_display}" --off
 else
     # xrandr --auto
-    xrandr --output "${external_display}" --auto --primary
+    xrandr $user_string
+    ./$HOME/.config/feh/.fehbg
 fi
 

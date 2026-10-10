@@ -8,10 +8,11 @@
 # TAGS: POSIX DASH DMENU
 
 # TODO:
-# - FIX TRIPLE MONITOR SUPPORT
+# - Rotation from config file
 # - CHECK IF XRANDR IS VALID BEFORE RUNNING DMENU
 # - Conf option - check if <?>.dpi $selection exists in xresources and use that instead?
 # - see disconnected ports option
+# - prevent switching to disabled laptop lid?
 
 # user time
 # Prompt "Switch Monitor" con mons, multi, conf, done?
@@ -101,9 +102,36 @@ multi_prompt ()
     done
 }
 
+# replace $sel_mons list with list with parameters from config
+apply_user_prefs ()
+{
+    if [ -f "$XDG_CONFIG_HOME/monswitch/monswitch.conf" ]; then
+	config_file=$(cat "$XDG_CONFIG_HOME/monswitch/monswitch.conf")
+	oldIFS=$IFS
+	IFS=' '
+	user_string=""
+	for mon in $xrandr_string; do
+	    IFS='
+'				# (:
+	    for line in $config_file; do
+		if [ "${line#"$mon"}" != "$line" ]; then
+		    # echo $line
+		    user_string="${user_string}${line} "
+		else
+		    # echo  $mon
+		    user_string="${user_string}${mon} "
+		fi
+	    done
+	done
+    else
+	echo "File does not exist or is not a regular file: $XDG_CONFIG_HOME/monswitch/monswitch.conf"
+    fi
+    IFS=$oldIFS
+}
+
 gen_xrandr_string ()
 {
-    # Remove sel_mons from $all_mons and echo resulting items "--off"
+    # Remove sel_mons from $all_mons and echo "--output" <resulting items> "--off"
     unsel_string=$(
 	for word in $all_mons; do
 	    expr " $sel_mons " : '.*'$word'.*' 1>/dev/null ||
@@ -139,11 +167,15 @@ main ()
     if [ "$selection" = "multi" ]; then
      	multi_prompt
 	gen_xrandr_string
-	xrandr $xrandr_string
+	apply_user_prefs
+	echo xrandr $user_string
+	xrandr $user_string
     else
      	sel_mons=$selection
 	gen_xrandr_string
-	xrandr $xrandr_string
+	apply_user_prefs
+	echo xrandr $user_string
+	xrandr $user_string
     fi || return 0;
 }
 main

@@ -1,7 +1,27 @@
 #!/bin/dash
 
+DEV='/dev/sda1'
+DEV1='/dev/sdb1'
+DEV2='/dev/sdc5'
+DEV3='/dev/sdd5'
+RAID='/dev/md127'
 
-mount /dev/sda2 /mnt/Storage
-mount /dev/sda5 /mnt/Storage2
-mount /dev/sdb1 /mnt/Storage3
-mount /dev/sdc5 /mnt/Storage4
+echo mounting "$DEV"
+mount "$DEV" /mnt/Storage && \
+    echo ""$DEV" mounted to /mnt/Storage"
+
+echo mounting "$DEV1"
+mount "$DEV1" /mnt/Storage2 && \
+    echo ""$DEV1" mounted to /mnt/Storage"
+
+echo mounting "$DEV2"
+mount "$DEV2" /mnt/Storage3 && \
+    echo ""$DEV2" mounted to /mnt/Storage3" 
+
+echo mounting "$DEV3"
+mount "$DEV3" /mnt/Storage4/ && \
+    echo ""$DEV3" mounted to /mnt/Storage4"
+
+echo mounting "$RAID"
+mount "$RAID" /mnt/raid/ && \
+    echo ""$RAID" mounted to /mnt/raid"
