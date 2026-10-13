@@ -8,8 +8,16 @@
 
 
 if [ "$#" -eq 0 ]; then
-    pacman --color=always
+    echo "Pacman Helper: enter 'p h' for help"
+    exit 1
 fi
+
+case $1 in
+    -*)
+    pacman --color=always "$@"
+    exit 0
+    ;;
+esac
 
 pkg_name_check ()
 {
@@ -67,6 +75,7 @@ cc	Clear cache\n"
 	;;
     bs)
 	pkg_name_check "$@"
+	echo "$@"
 	pacman -Ql | grep "$2$" | cut -f1 -d ' ' | uniq
 	;;
     qs)
