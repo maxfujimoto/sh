@@ -14,7 +14,7 @@
 # - see disconnected ports option
 # - prevent switching to disabled laptop lid?
 
-# user time
+# User time
 # Prompt "Switch Monitor" con mons, multi, conf, done?
 
 # conf
@@ -33,13 +33,26 @@
 all_mons=""
 dis_mons=""
 con_mons=""
+xrandr_output=""
 
+# Check if xrander is accessible
+if command -v xrandr >/dev/null 2>&1; then
+    echo "Generating xrandr"
+else
+    echo "xrandr is not installed or in $PATH"
+    exit 1
+fi
+
+# Generate xrandr
+xrandr_output=$(xrandr)
+
+# Construct $all_mons, $con_mons, and $dis_mons from xrandr
 gen_mon_lists ()
 {
     userifs="$IFS"		# Save user $IFS
     IFS='
 ' ; set -f			# globing off
-    for line in $(xrandr); do	# TODO make $(xranrr) variable
+    for line in $xrandr_output ; do
 	case "$line" in
 	    *\ con* )
 		con_mons="${con_mons}${line%% *} "
@@ -103,35 +116,41 @@ multi_prompt ()
 }
 
 # replace $sel_mons list with list with parameters from config
-apply_user_prefs ()
+# if $sel_mons is only one item pass it or substitute it with config if match
+# for multi item match ans substitute from conf file to construct $user_string and overwrite $sel_mons
+user_prefs_setup ()
 {
+    # check if config exists
     if [ -f "$XDG_CONFIG_HOME/monswitch/monswitch.conf" ]; then
-	config_file=$(cat "$XDG_CONFIG_HOME/monswitch/monswitch.conf")
 	oldIFS=$IFS
 	IFS=' '
+	config_file=$(cat "$XDG_CONFIG_HOME/monswitch/monswitch.conf")
 	user_string=""
-	for mon in $xrandr_string; do
+
+	for mon in $sel_mons; do
 	    IFS='
-'				# (:
+'				# :)
 	    for line in $config_file; do
 		if [ "${line#"$mon"}" != "$line" ]; then
-		    # echo $line
-		    user_string="${user_string}${line} "
-		else
-		    # echo  $mon
-		    user_string="${user_string}${mon} "
+		    user_string="${user_string}${line}
+"				# :):)
 		fi
 	    done
 	done
+	IFS=$oldIFS
+	sel_mons=$user_string
     else
 	echo "File does not exist or is not a regular file: $XDG_CONFIG_HOME/monswitch/monswitch.conf"
     fi
-    IFS=$oldIFS
 }
+
+# Construct the xrandr string
+# 1 Construct the --off list
+# 2 Construct the --auto list
 
 gen_xrandr_string ()
 {
-    # Remove sel_mons from $all_mons and echo "--output" <resulting items> "--off"
+    # 1. Remove sel_mons from $all_mons and echo "--output" <resulting items> "--off"
     unsel_string=$(
 	for word in $all_mons; do
 	    expr " $sel_mons " : '.*'$word'.*' 1>/dev/null ||
@@ -139,43 +158,58 @@ gen_xrandr_string ()
 	done
 		)
 
-    # Echo first $sel_mon "--auto" and loop through rest adding "--right-of"
+    # 2. Echo first $sel_mon "--auto" and loop through rest adding "--right-of"
     prev_mon=''
     sel_string=$(
+
+	oldIFS=$IFS
+	IFS='
+'				# :)
 	set -- $sel_mons	# set items of $sel_mons to array
+
 	echo "--output $1 --auto"
 	prev_mon=$1
-	shift 1 $@		# remove first array item
+	shift 1 "$@"		# remove first array item
+	# construct list of selmons and the first element of semons for the right of var
 	for word in $@; do
-	    echo "--output ${word} --auto --right-of ${prev_mon}"
+	    echo "--output ${word} --auto --right-of ${prev_mon%% *}"
 	    prev_mon=$word
 	done
+
+	IFS=$oldIFS
 	      )
     xrandr_string="${unsel_string}${sel_string}"
 }
 
-gen_mon_lists			# this has global scope
-
 main ()
 {
-    multi_opts="$con_mons"
+    multi_opts=""
     local selection=NULL
+
+    gen_mon_lists
+
+    multi_opts="$con_mons"
+    # Dmenu Call
     selection=$(dmenu_prompt "Switch Monitor" "$con_mons" "multi")
 
-    # Check if dmenu set anything 
+    # Check if dmenu set anything
     [ -z ${selection} ] || \
     if [ "$selection" = "multi" ]; then
-     	multi_prompt
+	multi_prompt
+	echo SELMONS $sel_mons
+	user_prefs_setup
 	gen_xrandr_string
-	apply_user_prefs
-	echo xrandr $user_string
-	xrandr $user_string
+	echo xrandr $xrandr_string
+	# xrandr --dryrun $xrandr_string
+	xrandr $xrandr_string
     else
-     	sel_mons=$selection
+	sel_mons=$selection
+	echo SELMONS $sel_mons
+	user_prefs_setup
 	gen_xrandr_string
-	apply_user_prefs
-	echo xrandr $user_string
-	xrandr $user_string
+	echo xrandr $xrandr_string
+	# xrandr --dryrun $xrandr_string
+	xrandr $xrandr_string
     fi || return 0;
 }
 main
