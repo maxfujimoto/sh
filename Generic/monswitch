@@ -8,8 +8,6 @@
 # TAGS: POSIX DASH DMENU
 
 # TODO:
-# - Rotation from config file
-# - CHECK IF XRANDR IS VALID BEFORE RUNNING DMENU
 # - Conf option - check if <?>.dpi $selection exists in xresources and use that instead?
 # - see disconnected ports option
 # - prevent switching to disabled laptop lid?
@@ -30,29 +28,42 @@
 # LOOP: prompt "(L->R) | Monitor" con mons done
 # con mon appends mon to selmon and applies conf, done exits doing nothing
 
-all_mons=""
-dis_mons=""
-con_mons=""
+
+#--------------------------------   Globals   ---------------------------------#
+# is global to pass to main so the xrandr check can exit script early
 xrandr_output=""
 
-# Check if xrander is accessible
-if command -v xrandr >/dev/null 2>&1; then
-    echo "Generating xrandr"
-else
+#------------------------------   Fetch xrandr   ------------------------------#
+# this is done before loading all off the functions and running main() 
+
+# Check if xrandr is accessible
+if ! command -v xrandr >/dev/null 2>&1; then
     echo "xrandr is not installed or in $PATH"
     exit 1
 fi
 
 # Generate xrandr
+echo "Generating xrandr"
 xrandr_output=$(xrandr)
+if [ -z "$xrandr_output" ]; then
+    echo "xrandr output is empty" >&2
+    exit 1
+fi
+echo "Generated xrandr"
 
-# Construct $all_mons, $con_mons, and $dis_mons from xrandr
+#-----------------------------   Load Functions   -----------------------------#
+
+# Use $xrandr_output to construct the following SPACE SEPARATED lists
+#	$all_mons - all monitor ids
+#	$con_mons - connected moniteor ids
+#	$dis_mons -  disonnected monitor ids
+# Gets passed xrandr output
 gen_mon_lists ()
 {
     userifs="$IFS"		# Save user $IFS
     IFS='
 ' ; set -f			# globing off
-    for line in $xrandr_output ; do
+    for line in $1; do
 	case "$line" in
 	    *\ con* )
 		con_mons="${con_mons}${line%% *} "
@@ -66,7 +77,7 @@ gen_mon_lists ()
     set +f
 }
 
-# dmenu prompt and check $selection
+# Use dmenu to prompt and check if the $selection matches an element of $con_mons
 dmenu_prompt ()
 {
     selection=''
@@ -86,15 +97,17 @@ dmenu_prompt ()
     done
 }
 
+# Use Dmenu to prompt for selections to build the SPACE SEPARATED $multi-opts list
 multi_prompt ()
 {
     i=1				# keep track of how many mons being set
-    dmenu_return=''
-    selection=''
+    # dmenu_return=''
+    # selection=''
     sel_mons=''
 
     while true; do
-	local selection=$(dmenu_prompt "(L->R) | Monitor #$i" "$multi_opts" "done")
+	local selection=''
+	selection=$(dmenu_prompt "(L->R) | Monitor #$i" "$multi_opts" "done")
 	# Gen $multi_opts if necessary
 	if [ "$selection" = "done" ] ;then
 	    break
@@ -115,13 +128,15 @@ multi_prompt ()
     done
 }
 
-# replace $sel_mons list with list with parameters from config
+# Take SPACE SEPARATED $sel_mons list and convert it to LINE SEPERATED $sel_string
 # if $sel_mons is only one item pass it or substitute it with config if match
-# for multi item match ans substitute from conf file to construct $user_string and overwrite $sel_mons
+# for multi item match ans substitute from conf file to construct LINE SEPERATED $user_string and overwrite $sel_mons.
+# If conf file doesn't exist convert to line separated list
 user_prefs_setup ()
 {
     # check if config exists
     if [ -f "$XDG_CONFIG_HOME/monswitch/monswitch.conf" ]; then
+	echo "Loading" "$XDG_CONFIG_HOME""/monswitch/monswitch.conf"
 	oldIFS=$IFS
 	IFS=' '
 	config_file=$(cat "$XDG_CONFIG_HOME/monswitch/monswitch.conf")
@@ -138,78 +153,81 @@ user_prefs_setup ()
 	    done
 	done
 	IFS=$oldIFS
-	sel_mons=$user_string
+	sel_string=$user_string
+	echo UPS CFG $sel_string
     else
 	echo "File does not exist or is not a regular file: $XDG_CONFIG_HOME/monswitch/monswitch.conf"
+	for mon in $sel_mons; do
+	    user_string="${user_string}${mon}
+"
+	done
+	sel_string=$user_string
+	echo UPS REG $sel_string
     fi
 }
 
 # Construct the xrandr string
 # 1 Construct the --off list
 # 2 Construct the --auto list
-
 gen_xrandr_string ()
 {
+    userifs="$IFS"
     # 1. Remove sel_mons from $all_mons and echo "--output" <resulting items> "--off"
-    unsel_string=$(
+    xrandr_unsel=$(
+	IFS=' '
 	for word in $all_mons; do
 	    expr " $sel_mons " : '.*'$word'.*' 1>/dev/null ||
 		echo "--output $word --off "
 	done
 		)
-
     # 2. Echo first $sel_mon "--auto" and loop through rest adding "--right-of"
     prev_mon=''
-    sel_string=$(
-
-	oldIFS=$IFS
+    xrandr_sel=$(
 	IFS='
 '				# :)
-	set -- $sel_mons	# set items of $sel_mons to array
-
-	echo "--output $1 --auto"
+	set -- $sel_string # set items of $sel_mons to array
+	echo "--output ${1%% *} --auto ${1#* }"
 	prev_mon=$1
-	shift 1 "$@"		# remove first array item
+	shift 1 $@		# remove first array item
 	# construct list of selmons and the first element of semons for the right of var
 	for word in $@; do
-	    echo "--output ${word} --auto --right-of ${prev_mon%% *}"
+	    echo "--output ${word%% *} --auto ${word#* } --right-of ${prev_mon%% *}"
 	    prev_mon=$word
 	done
-
-	IFS=$oldIFS
 	      )
-    xrandr_string="${unsel_string}${sel_string}"
+    xrandr_string="${xrandr_unsel}${xrandr_sel}"
+    IFS=$userifs
 }
 
 main ()
 {
-    multi_opts=""
+    all_mons=''
+    dis_mons=''
+    con_mons=''
+    sel_string=''
+    multi_opts=''
     local selection=NULL
 
-    gen_mon_lists
+    # Generate con_mons, dis_mons and all_mons from $xrandr_output
+    gen_mon_lists "$xrandr_output"
 
-    multi_opts="$con_mons"
     # Dmenu Call
+    multi_opts="$con_mons"
     selection=$(dmenu_prompt "Switch Monitor" "$con_mons" "multi")
 
     # Check if dmenu set anything
     [ -z ${selection} ] || \
     if [ "$selection" = "multi" ]; then
 	multi_prompt
-	echo SELMONS $sel_mons
-	user_prefs_setup
-	gen_xrandr_string
-	echo xrandr $xrandr_string
-	# xrandr --dryrun $xrandr_string
-	xrandr $xrandr_string
     else
 	sel_mons=$selection
-	echo SELMONS $sel_mons
-	user_prefs_setup
-	gen_xrandr_string
-	echo xrandr $xrandr_string
-	# xrandr --dryrun $xrandr_string
-	xrandr $xrandr_string
-    fi || return 0;
+    fi 
+    echo SELECTED MONITORS: "$sel_mons"
+    user_prefs_setup
+    echo main sels $sel_string
+    gen_xrandr_string
+    echo xrandr $xrandr_string
+    # xrandr --dryrun $xrandr_string
+    xrandr $xrandr_string
 }
 main
