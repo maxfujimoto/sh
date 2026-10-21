@@ -215,8 +215,10 @@ main ()
     multi_opts="$con_mons"
     selection=$(dmenu_prompt "Switch Monitor" "$con_mons" "multi")
 
-    # Check if dmenu set anything
-    [ -z ${selection} ] || \
+    # Check if dmenu set anything by checking if selection is empty
+    if [ -z ${selection} ]; then
+	echo borke
+    else
     if [ "$selection" = "multi" ]; then
 	multi_prompt
     else
@@ -228,6 +230,7 @@ main ()
     gen_xrandr_string
     echo xrandr $xrandr_string
     # xrandr --dryrun $xrandr_string
-    xrandr $xrandr_string
+    # xrandr $xrandr_string
+    fi
 }
 main
