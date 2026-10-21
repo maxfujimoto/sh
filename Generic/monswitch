@@ -98,19 +98,23 @@ dmenu_prompt ()
 }
 
 # Use Dmenu to prompt for selections to build the SPACE SEPARATED $multi-opts list
+# if selection is done and no selmons are set do nothing, otherwise set selmons with selection
 multi_prompt ()
 {
     i=1				# keep track of how many mons being set
-    # dmenu_return=''
-    # selection=''
     sel_mons=''
 
+    # loop over dmenu
     while true; do
 	local selection=''
 	selection=$(dmenu_prompt "(L->R) | Monitor #$i" "$multi_opts" "done")
-	# Gen $multi_opts if necessary
-	if [ "$selection" = "done" ] ;then
-	    break
+	if [ "$selection" = "done" ]; then
+	    if [ -z $sel_mons ]; then
+		echo No Changes Made
+		exit 1
+	    else
+		break
+	    fi
 	else
 	    sel_mons="${sel_mons}${selection} "
 	    i=$((i+1))
@@ -154,7 +158,6 @@ user_prefs_setup ()
 	done
 	IFS=$oldIFS
 	sel_string=$user_string
-	echo UPS CFG $sel_string
     else
 	echo "File does not exist or is not a regular file: $XDG_CONFIG_HOME/monswitch/monswitch.conf"
 	for mon in $sel_mons; do
@@ -162,7 +165,6 @@ user_prefs_setup ()
 "
 	done
 	sel_string=$user_string
-	echo UPS REG $sel_string
     fi
 }
 
@@ -215,9 +217,10 @@ main ()
     multi_opts="$con_mons"
     selection=$(dmenu_prompt "Switch Monitor" "$con_mons" "multi")
 
-    # Check if dmenu set anything by checking if selection is empty
+    # Check if dmenu set anything by checking if $selection is empty
     if [ -z ${selection} ]; then
-	echo borke
+	echo No Changes Made
+	exit 0
     else
     if [ "$selection" = "multi" ]; then
 	multi_prompt
@@ -230,7 +233,7 @@ main ()
     gen_xrandr_string
     echo xrandr $xrandr_string
     # xrandr --dryrun $xrandr_string
-    # xrandr $xrandr_string
+    xrandr $xrandr_string
     fi
 }
 main
